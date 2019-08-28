@@ -1,0 +1,104 @@
+*****************************************************************************************
+            
+            DESIGN    DOC    FOR    MYSHELL
+
+*****************************************************************************************
+
+Summary:
+"myshell" is a simple Unix shell writen in C. It can execute all the Unix 
+commands (i.e. "ls", "cat", "cd"......) without terminating itself. unless
+the user input "exit" command.
+
+Usage:
+After "myshell.c" gets compiled successfully, the binary file "myshell" would 
+be generated. "myshell" can be executed by typing "./myshell" in the terminal.
+
+Implementation:
+myshell can be broken down to 3 main parts:
+    * Read Phase
+        myshell use the  flex to generate the parser called "getLine()". 
+        "getLine()" would return a pointer to char* array, which contains the
+        command. (i.e. ["ls"]["-l"][NULL] is generated after "ls -l" is typed to 
+        terminal)
+        args is the pointer to this array (char** args = getLine();)
+
+    * Execuate phase
+        The key philosophy of Execuation phase is forking. In order to execuate 
+        the other other command (i.e. "ls, ch, cat......"), the old one has to
+        duplicate itself to achieve this.
+
+        During the execuation phase, the fork() system call will be used. When the fork()
+        is called, the operating system makes the duplicate of the process which
+        is currently running (myshell). The parent process and newlly created child
+        process will be running concurrently. fork() will return 0 to the child process.
+        fork () will return process ID of the child to the parent process.
+
+        Now the child process will use the execvp() system call to execute the command 
+        inputted by the user. Meanwhile the parent process will use wait() system to wait
+        for the child proces to finish.
+
+        After the previous command is successfully finished. the prompt "$ " will kindly
+        ask the user to input the new command. then loop back to the Read Phase.
+
+    * Termination Phase
+        When the my shell prompt the user with "$ ", if the user input the "exit". myshell
+        will be terminated.
+
+
+myshell also supoorts file redirection:
+    * ">" (i.e. ls > file)
+        When the user use ">", A command's output will be redirected to the file. The following
+        block of the code will change the stdout(1) to the file.
+        { fd = creat(args[i+1], 0666);
+                close(1);
+                dup(fd);
+                close(fd);
+                args[i] = NULL;  }
+        after that, when execvp() gets executed, whatever output produced by the command will be
+        redirected to the file pointed by the file decriptor
+    * ">>" (i.e. ls >> file)
+        When the user use ">>", A command's output will be appended to file without deleting the
+        previous changes. The following block of the code make it happend by setting the O_APPEND flag
+        { fd = open(args[i+1], O_CREAT | O_WRONLY | O_APPEND, 0666);
+                close(1);
+                dup(fd);
+                close(fd);  
+                args[i] = NULL; }
+        after that, when execvp() gets executed, whatever output produced by the command will be append
+        to the file pointed by the file descriptor
+    * "<" (i.e. sort < file)
+        when the user use "<", A command's input will be redirected from the file. the following block fo
+        code will change the stdin(0) form the file
+        {fd = open(args[i+1], O_CREAT | O_RDONLY, 0666);
+                close(0);
+                dup(fd);
+                close(fd);
+                args[i] = args[i+1];
+                args[i+1] = NULL;}
+        after that, when execvp() gets executed, the command will read from the file insted of console which
+        is stdin(0)
+
+    * "|" (i.e. ls -l | grep "xr")
+        when the user use "|", the 1st command output will be redirected to 2nd command's input. the following
+        block of code will the stdout(1) of the 1st to the pipe. then 2nd command will get it's input from pipe.
+        {dup2(p[1], 1);
+        close(p[1]); 
+        close(p[0]);}
+        after thet, whne execvp() gets executed, there will be a pipe established between the first process and
+        2nd process.
+        multiple pipes are also possible by using the for loop.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

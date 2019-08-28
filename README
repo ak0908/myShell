@@ -1,0 +1,17 @@
+***** MYSHELL ******
+
+Usage:
+1) Type command "make" inside of assign-1 folder. The binary file "myshell" would be generated.
+2) Type "./myshell". The shell would start running
+3) Type "exit". This would terminate the shell
+
+* myshell supports all the UNIX command. i.e. ls, cd, clear, pwd.
+* myshell supports all the UNIX command with arguments. i.e. ls -l, cd assign-1/
+* myshell also supports file redirection. i.e. ls -l > file
+* myshell also supports unlimited piping. i.e. ls | sort | less | more......
+
+
+Usage for makefile:
+"make"         --->    will generage binary file "myshell"
+"make clean"   --->    will rm other genearated file by make
+"make infer"   --->    will conduct the infer test which include infer-capture and infer-analyze
